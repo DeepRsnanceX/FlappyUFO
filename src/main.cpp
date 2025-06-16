@@ -40,6 +40,9 @@ class $modify(FlappyPlayerObject, PlayerObject) {
 		if (!PlayerObject::pushButton(p0)) return false;
 
 		auto fields = m_fields.self();
+		float jumpRot = -40.f;
+		float fallRot = 60.f;
+
 		if (!m_isBird) return true;
 
 		if (PlayLayer::get()) {
@@ -47,8 +50,34 @@ class $modify(FlappyPlayerObject, PlayerObject) {
 			fields->isDownRotated = false;
 			this->unscheduleAllSelectors();
 
-			auto justJumpedAnim = CCEaseOut::create(CCRotateTo::create(0.1f, -40.f), 2.0f);
-			auto theRotatingDownAnimThingLol = CCEaseIn::create(CCRotateTo::create(0.6f, 60.f), 2.0f);
+			if (m_isSecondPlayer) {
+				if (m_isUpsideDown) {
+					jumpRot = 40.f;
+					fallRot = -60.f;
+				} else {
+					jumpRot = -40.f;
+					fallRot = 60.f;
+				}
+			} else if (!m_isSecondPlayer) {
+				if (!m_isUpsideDown) {
+					jumpRot = -40.f;
+					fallRot = 60.f;
+				} else {
+					jumpRot = 40.f;
+					fallRot = -60.f;
+				}
+			}
+
+			if (m_isGoingLeft) {
+				jumpRot = -jumpRot;
+				fallRot = -fallRot;
+			} else {
+				jumpRot = jumpRot;
+				fallRot = fallRot;
+			}
+
+			auto justJumpedAnim = CCEaseOut::create(CCRotateTo::create(0.1f, jumpRot), 2.0f);
+			auto theRotatingDownAnimThingLol = CCEaseIn::create(CCRotateTo::create(0.6f, fallRot), 2.0f);
 
 			auto bothLol = CCSequence::create(
 				justJumpedAnim,
