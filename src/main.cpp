@@ -6,6 +6,8 @@ using namespace geode::prelude;
 class $modify(FlappyPlayerObject, PlayerObject) {
 	struct Fields{
 		bool isDownRotated = false;
+		float jumpRot = -30.f;
+		float fallRot = 60.f;
 	};
 
 	void cooldownRot(float dt){
@@ -15,10 +17,11 @@ class $modify(FlappyPlayerObject, PlayerObject) {
 	void update(float p0) {
 		PlayerObject::update(p0);
 
+		auto fields = m_fields.self();
 		if (!m_isBird) return;
 
 		if (m_fields->isDownRotated && PlayLayer::get()) {
-			this->setRotation(60.f);
+			this->setRotation(fields->fallRot);
 		}
 
 	}
@@ -40,10 +43,11 @@ class $modify(FlappyPlayerObject, PlayerObject) {
 		if (!PlayerObject::pushButton(p0)) return false;
 
 		auto fields = m_fields.self();
-		float jumpRot = -40.f;
-		float fallRot = 60.f;
 
 		if (!m_isBird) return true;
+
+		float jumpAnimTime = 0.1f / m_gravityMod;
+		float fallAnimTime = 0.5f / m_gravityMod;
 
 		if (PlayLayer::get()) {
 			this->stopAllActions();
@@ -52,32 +56,32 @@ class $modify(FlappyPlayerObject, PlayerObject) {
 
 			if (m_isSecondPlayer) {
 				if (m_isUpsideDown) {
-					jumpRot = 40.f;
-					fallRot = -60.f;
+					fields->jumpRot = 30.f;
+					fields->fallRot = -60.f;
 				} else {
-					jumpRot = -40.f;
-					fallRot = 60.f;
+					fields->jumpRot = -30.f;
+					fields->fallRot = 60.f;
 				}
 			} else if (!m_isSecondPlayer) {
 				if (!m_isUpsideDown) {
-					jumpRot = -40.f;
-					fallRot = 60.f;
+					fields->jumpRot = -30.f;
+					fields->fallRot = 60.f;
 				} else {
-					jumpRot = 40.f;
-					fallRot = -60.f;
+					fields->jumpRot = 30.f;
+					fields->fallRot = -60.f;
 				}
 			}
 
 			if (m_isGoingLeft) {
-				jumpRot = -jumpRot;
-				fallRot = -fallRot;
+				fields->jumpRot = -fields->jumpRot;
+				fields->fallRot = -fields->fallRot;
 			} else {
-				jumpRot = jumpRot;
-				fallRot = fallRot;
+				fields->jumpRot = fields->jumpRot;
+				fields->fallRot = fields->fallRot;
 			}
 
-			auto justJumpedAnim = CCEaseOut::create(CCRotateTo::create(0.1f, jumpRot), 2.0f);
-			auto theRotatingDownAnimThingLol = CCEaseIn::create(CCRotateTo::create(0.6f, fallRot), 2.0f);
+			auto justJumpedAnim = CCEaseOut::create(CCRotateTo::create(jumpAnimTime, fields->jumpRot), 2.0f);
+			auto theRotatingDownAnimThingLol = CCEaseIn::create(CCRotateTo::create(fallAnimTime, fields->fallRot), 2.0f);
 
 			auto bothLol = CCSequence::create(
 				justJumpedAnim,
@@ -86,7 +90,7 @@ class $modify(FlappyPlayerObject, PlayerObject) {
 			);
 
 			this->runAction(bothLol);
-			this->scheduleOnce(schedule_selector(FlappyPlayerObject::cooldownRot), 0.7f);
+			this->scheduleOnce(schedule_selector(FlappyPlayerObject::cooldownRot), jumpAnimTime + fallAnimTime);
 		}
 		return true;
 
